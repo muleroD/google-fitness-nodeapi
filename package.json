@@ -3,7 +3,8 @@
   "version": "0.0.1",
   "private": true,
   "scripts": {
-    "start": "$env:DEBUG='google-fitness-nodeapi:server' & nodemon ./bin/www"
+    "start": "$env:DEBUG='google-fitness-nodeapi:server' & nodemon ./bin/www",
+    "lint": "prettier --write ."
   },
   "dependencies": {
     "axios": "^0.21.1",
@@ -17,5 +18,8 @@
     "morgan": "~1.9.1",
     "nodemon": "^2.0.12",
     "pug": "2.0.0-beta11"
+  },
+  "devDependencies": {
+    "prettier": "2.3.2"
   }
 }
