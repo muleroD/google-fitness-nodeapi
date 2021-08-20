@@ -3,3 +3,11 @@ extends layout
 block content
   h1= title
   p Welcome to #{title}
+  a(href='/session') Lists sessions previously created.
+  br
+  a(href='/dataSources') Lists all data sources that are visible to the developer, using the OAuth scopes provided.
+  br
+  br
+  a(href='/steps') Step Count
+  br
+  a(href='/heart-rates') Frequência Cardíaca
