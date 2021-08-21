@@ -1,6 +1,7 @@
 const express = require("express");
 const router = express.Router();
 const { isEmpty } = require("lodash");
+const axios = require('axios');
 
 const { clientId, clientSecret, redirectUri } = require("../config/google");
 
@@ -62,5 +63,28 @@ router.get("/oauth2callback", (req, res, next) => {
     res.redirect("/");
   });
 });
+
+// User info
+router.get("/session", (req, res, next) => {
+  axios
+    .get("https://fitness.googleapis.com/fitness/v1/users/me/sessions", {
+      headers: { authorization: getAuthorization() },
+    })
+    .then(({ data }) => res.send(data))
+    .catch((err) => res.send(err));
+});
+
+router.get("/dataSources", (req, res, next) => {
+  axios
+    .get("https://fitness.googleapis.com/fitness/v1/users/me/dataSources", {
+      headers: { authorization: getAuthorization() },
+    })
+    .then(({ data }) => res.send(data))
+    .catch((err) => res.send(err));
+});
+
+function getAuthorization() {
+  return "Bearer " + oauth2Client.credentials.access_token;
+}
 
 module.exports = router;
