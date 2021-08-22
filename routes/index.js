@@ -5,8 +5,10 @@ const { isEmpty } = require("lodash");
 const { default: axios } = require("axios");
 
 const { clientId, clientSecret, redirectUri } = require("../config/google");
-const stepMapper = require("../helper/mapper/step");
 const renderError = require("../helper/renderError");
+
+const stepMapper = require("../helper/mapper/step");
+const heartRate = require("../helper/mapper/heartRate");
 
 const { google } = require("googleapis");
 const OAuth2 = google.auth.OAuth2;
@@ -107,7 +109,7 @@ router.get("/aggregate-example", (req, res, next) => {
     .catch(err => renderError(err, res));
 });
 
-// Measures
+// Activity data types
 
 router.get("/step", (req, res, next) => {
   const body = getAggregateBy("com.google.step_count.delta", "derived:com.google.step_count.delta:com.google.android.gms:estimated_steps", "01062021");
@@ -117,6 +119,20 @@ router.get("/step", (req, res, next) => {
       headers: { authorization: getAuthorization() }
     })
     .then(({ data }) => stepMapper.sumTotalAndListAll(res, data))
+    .catch(err => renderError(err, res));
+});
+
+
+// Body data types
+
+router.get("/heart-rate", (req, res, next) => {
+  const body = getAggregateBy("com.google.heart_rate.bpm", "derived:com.google.heart_rate.bpm:com.google.android.gms:merge_heart_rate_bpm", "01062021");
+
+  axios
+    .post("https://fitness.googleapis.com/fitness/v1/users/me/dataset:aggregate", body, {
+      headers: { authorization: getAuthorization() }
+    })
+    .then(({ data }) => heartRate.simpleData(res, data))
     .catch(err => renderError(err, res));
 });
 
