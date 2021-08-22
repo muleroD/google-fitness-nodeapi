@@ -5,6 +5,8 @@ const { isEmpty } = require("lodash");
 const { default: axios } = require("axios");
 
 const { clientId, clientSecret, redirectUri } = require("../config/google");
+const stepMapper = require("../helper/mapper/step");
+const renderError = require("../helper/renderError");
 
 const { google } = require("googleapis");
 const OAuth2 = google.auth.OAuth2;
@@ -72,7 +74,7 @@ router.get("/session", (req, res, next) => {
       headers: { authorization: getAuthorization() }
     })
     .then(({ data }) => res.send(data))
-    .catch(err => res.send(err));
+    .catch(err => renderError(err, res));
 });
 
 router.get("/dataSources", (req, res, next) => {
@@ -81,7 +83,7 @@ router.get("/dataSources", (req, res, next) => {
       headers: { authorization: getAuthorization() }
     })
     .then(({ data }) => res.send(data))
-    .catch(err => res.send(err));
+    .catch(err => renderError(err, res));
 });
 
 router.get("/aggregate-example", (req, res, next) => {
@@ -102,11 +104,33 @@ router.get("/aggregate-example", (req, res, next) => {
       headers: { authorization: getAuthorization() }
     })
     .then(({ data }) => res.send(data))
-    .catch(err => res.send(err));
+    .catch(err => renderError(err, res));
+});
+
+// Measures
+
+router.get("/step", (req, res, next) => {
+  const body = getAggregateBy("com.google.step_count.delta", "derived:com.google.step_count.delta:com.google.android.gms:estimated_steps", "01062021");
+
+  axios
+    .post("https://fitness.googleapis.com/fitness/v1/users/me/dataset:aggregate", body, {
+      headers: { authorization: getAuthorization() }
+    })
+    .then(({ data }) => stepMapper.sumTotalAndListAll(res, data))
+    .catch(err => renderError(err, res));
 });
 
 function getAuthorization() {
   return "Bearer " + oauth2Client.credentials.access_token;
+}
+
+function getAggregateBy(dataTypeName, dataSourceId, start = null, end = null, durationMillis = 86400000, format = "DDMMYYYY") {
+  return {
+    aggregateBy: [{ dataTypeName, dataSourceId }],
+    bucketByTime: { durationMillis }, // 86400000 is 24 hours
+    startTimeMillis: start ? moment(start, format).valueOf() : moment().valueOf(),
+    endTimeMillis: end ? moment(end, format).valueOf() : moment().valueOf()
+  };
 }
 
 module.exports = router;
