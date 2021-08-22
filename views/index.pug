@@ -3,11 +3,23 @@ extends layout
 block content
   h1= title
   p Welcome to #{title}
-  a(href='/session') Lists sessions previously created.
-  br
-  a(href='/dataSources') Lists all data sources that are visible to the developer, using the OAuth scopes provided.
-  br
-  br
-  a(href='/steps') Step Count
-  br
-  a(href='/heart-rates') Frequência Cardíaca
+
+  table.table.table-bordered.table-hover
+    caption User Info
+    thead.thead-light
+      tr
+        th(scope='col') Link
+        th(scope='col') Description
+    tbody
+      tr
+        td 
+          a(href='/dataSources') Data Sources
+        td Lists all data sources that are visible to the developer, using the OAuth scopes provided.
+      tr
+        td  
+          a(href='/session') Session
+        td Lists sessions previously created
+      tr
+        td  
+          a(href='/aggregate-example') Aggregate Example
+        td Aggregates data of a certain type or stream into buckets divided by a given type of boundary.
