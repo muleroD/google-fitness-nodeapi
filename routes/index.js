@@ -1,7 +1,8 @@
 const express = require("express");
 const router = express.Router();
+const moment = require("moment");
 const { isEmpty } = require("lodash");
-const axios = require('axios');
+const { default: axios } = require("axios");
 
 const { clientId, clientSecret, redirectUri } = require("../config/google");
 
@@ -31,7 +32,7 @@ const scopes = [
   "https://www.googleapis.com/auth/fitness.blood_pressure.write",
   "https://www.googleapis.com/auth/fitness.activity.write",
   "https://www.googleapis.com/auth/fitness.reproductive_health.read",
-  "https://www.googleapis.com/auth/fitness.reproductive_health.write",
+  "https://www.googleapis.com/auth/fitness.reproductive_health.write"
 ];
 
 router.get("/", (req, res, next) => {
@@ -46,8 +47,8 @@ router.get("/", (req, res, next) => {
       scope: scopes,
       state: JSON.stringify({
         callbackUrl: req.body.callbackUrl,
-        userId: req.body.userId,
-      }),
+        userId: req.body.userId
+      })
     });
 
     res.redirect(url);
@@ -68,19 +69,40 @@ router.get("/oauth2callback", (req, res, next) => {
 router.get("/session", (req, res, next) => {
   axios
     .get("https://fitness.googleapis.com/fitness/v1/users/me/sessions", {
-      headers: { authorization: getAuthorization() },
+      headers: { authorization: getAuthorization() }
     })
     .then(({ data }) => res.send(data))
-    .catch((err) => res.send(err));
+    .catch(err => res.send(err));
 });
 
 router.get("/dataSources", (req, res, next) => {
   axios
     .get("https://fitness.googleapis.com/fitness/v1/users/me/dataSources", {
-      headers: { authorization: getAuthorization() },
+      headers: { authorization: getAuthorization() }
     })
     .then(({ data }) => res.send(data))
-    .catch((err) => res.send(err));
+    .catch(err => res.send(err));
+});
+
+router.get("/aggregate-example", (req, res, next) => {
+  const body = {
+    aggregateBy: [
+      {
+        dataTypeName: "com.google.step_count.delta",
+        dataSourceId: "derived:com.google.step_count.delta:com.google.android.gms:estimated_steps"
+      }
+    ],
+    bucketByTime: { durationMillis: 86400000 }, // This is 24 hours
+    startTimeMillis: moment().valueOf(), // Define start date
+    endTimeMillis: moment().valueOf() // Define end date
+  };
+
+  axios
+    .post("https://fitness.googleapis.com/fitness/v1/users/me/dataset:aggregate", body, {
+      headers: { authorization: getAuthorization() }
+    })
+    .then(({ data }) => res.send(data))
+    .catch(err => res.send(err));
 });
 
 function getAuthorization() {
