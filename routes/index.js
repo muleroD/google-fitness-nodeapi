@@ -7,8 +7,9 @@ const { default: axios } = require("axios");
 const { clientId, clientSecret, redirectUri } = require("../config/google");
 const renderError = require("../helper/renderError");
 
-const stepMapper = require("../helper/mapper/step");
-const heartRate = require("../helper/mapper/heartRate");
+const activityDataMapper = require("../helper/mapper/activityData");
+const bodyDataMapper = require("../helper/mapper/bodyData");
+const sleepDataMapper = require("../helper/mapper/sleepData");
 
 const { google } = require("googleapis");
 const OAuth2 = google.auth.OAuth2;
@@ -38,6 +39,10 @@ const scopes = [
   "https://www.googleapis.com/auth/fitness.reproductive_health.read",
   "https://www.googleapis.com/auth/fitness.reproductive_health.write"
 ];
+
+////////////////////////////////
+// Init | Login
+////////////////////////////////
 
 router.get("/", (req, res, next) => {
   if (!isEmpty(oauth2Client.credentials)) {
@@ -69,21 +74,20 @@ router.get("/oauth2callback", (req, res, next) => {
   });
 });
 
+////////////////////////////////
 // User info
+////////////////////////////////
+
 router.get("/session", (req, res, next) => {
   axios
-    .get("https://fitness.googleapis.com/fitness/v1/users/me/sessions", {
-      headers: { authorization: getAuthorization() }
-    })
+    .get("https://fitness.googleapis.com/fitness/v1/users/me/sessions", { headers: getAuthorization() })
     .then(({ data }) => res.send(data))
     .catch(err => renderError(err, res));
 });
 
 router.get("/dataSources", (req, res, next) => {
   axios
-    .get("https://fitness.googleapis.com/fitness/v1/users/me/dataSources", {
-      headers: { authorization: getAuthorization() }
-    })
+    .get("https://fitness.googleapis.com/fitness/v1/users/me/dataSources", { headers: getAuthorization() })
     .then(({ data }) => res.send(data))
     .catch(err => renderError(err, res));
 });
@@ -102,42 +106,55 @@ router.get("/aggregate-example", (req, res, next) => {
   };
 
   axios
-    .post("https://fitness.googleapis.com/fitness/v1/users/me/dataset:aggregate", body, {
-      headers: { authorization: getAuthorization() }
-    })
+    .post("https://fitness.googleapis.com/fitness/v1/users/me/dataset:aggregate", body, { headers: getAuthorization() })
     .then(({ data }) => res.send(data))
     .catch(err => renderError(err, res));
 });
 
+////////////////////////////////
 // Activity data types
+// https://developers.google.com/fit/datatypes/activity
+////////////////////////////////
 
-router.get("/step", (req, res, next) => {
+router.get("/step_count-delta", (req, res, next) => {
   const body = getAggregateBy("com.google.step_count.delta", "derived:com.google.step_count.delta:com.google.android.gms:estimated_steps", "01062021");
 
   axios
-    .post("https://fitness.googleapis.com/fitness/v1/users/me/dataset:aggregate", body, {
-      headers: { authorization: getAuthorization() }
-    })
-    .then(({ data }) => stepMapper.sumTotalAndListAll(res, data))
+    .post("https://fitness.googleapis.com/fitness/v1/users/me/dataset:aggregate", body, { headers: getAuthorization() })
+    .then(({ data }) => activityDataMapper.sumTotalAndListAllSteps(res, data))
     .catch(err => renderError(err, res));
 });
 
-
+////////////////////////////////
 // Body data types
+// https://developers.google.com/fit/datatypes/body
+////////////////////////////////
 
 router.get("/heart-rate", (req, res, next) => {
   const body = getAggregateBy("com.google.heart_rate.bpm", "derived:com.google.heart_rate.bpm:com.google.android.gms:merge_heart_rate_bpm", "01062021");
 
   axios
-    .post("https://fitness.googleapis.com/fitness/v1/users/me/dataset:aggregate", body, {
-      headers: { authorization: getAuthorization() }
-    })
-    .then(({ data }) => heartRate.simpleData(res, data))
+    .post("https://fitness.googleapis.com/fitness/v1/users/me/dataset:aggregate", body, { headers: getAuthorization() })
+    .then(({ data }) => bodyDataMapper.simpleDataHeartRate(res, data))
+    .catch(err => renderError(err, res));
+});
+
+////////////////////////////////
+// Sleep data type
+// https://developers.google.com/fit/datatypes/sleep
+////////////////////////////////
+
+router.get("/sleep", (req, res, next) => {
+  const body = getAggregateBy("com.google.sleep.segment", "derived:com.google.sleep.segment:com.google.android.gms:merged", "01062021");
+
+  axios
+    .post("https://fitness.googleapis.com/fitness/v1/users/me/dataset:aggregate", body, { headers: getAuthorization() })
+    .then(({ data }) => sleepDataMapper.sleepData(res, data))
     .catch(err => renderError(err, res));
 });
 
 function getAuthorization() {
-  return "Bearer " + oauth2Client.credentials.access_token;
+  return { authorization: "Bearer " + oauth2Client.credentials.access_token };
 }
 
 function getAggregateBy(dataTypeName, dataSourceId, start = null, end = null, durationMillis = 86400000, format = "DDMMYYYY") {

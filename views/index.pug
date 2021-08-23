@@ -4,6 +4,7 @@ block content
   h1= title
   p Welcome to #{title}
 
+  //- User Info table
   table.table.table-bordered.table-hover
     caption User Info
     thead.thead-light
@@ -24,18 +25,53 @@ block content
           a(href='/aggregate-example') Aggregate Example
         td Aggregates data of a certain type or stream into buckets divided by a given type of boundary.
 
+  
+  //- Activity data types table
   table.table.table-bordered.table-hover
-      caption Measure Info
-      thead.thead-light
-        tr
-          th(scope='col') Link
-          th(scope='col') Description
-      tbody
-        tr
-          td 
-            a(href='/step') Steps
-          td Using aggregate, list all steps by start/end date
-        tr
-          td 
-            a(href='/heart-rate') Heart Rate
-          td TO-DO
+    caption Activity data types
+    thead.thead-light
+      tr
+        th(scope='col') Link
+        th(scope='col') Description
+    tbody
+      tr
+        td 
+          a(href='/step_count-delta') Step count delta
+        td This data type captures the number of steps taken since the last reading. Each step is only reported once so data points shouldn't have overlapping time. The start time of each data point should represent the start of the interval in which steps were taken.
+
+
+  //- Body data types table
+  table.table.table-bordered.table-hover
+    caption Body data types
+    thead.thead-light
+      tr
+        th(scope='col') Link
+        th(scope='col') Description
+    tbody
+      tr
+        td Body fat percentage
+        td This data type captures the body fat percentage of a user. Each data point represents a person's total body fat as a percentage of their total body mass.
+      tr
+        td 
+          a(href='/heart-rate') Heart rate
+        td This data type captures the user's heart rate in beats per minute. Because each data point represents an instantaneous measure of heart rate, only the end time should be set. This will be used as the timestamp for the reading.
+      tr
+        td Height
+        td This data type captures that user's height in meters. Because each data point represents the height of the user at the time of the reading, only the end time should be set. This will be used as the timestamp for the reading.
+      tr
+        td Weight
+        td This data type captures that user's weight in kilograms. Because each data point represents the weight of the user at the time of the reading, only the end time should be set. This will be used as the timestamp for the reading.
+
+
+  //-  Sleep data type table
+  table.table.table-bordered.table-hover
+    caption Sleep data type
+    thead.thead-light
+      tr
+        th(scope='col') Link
+        th(scope='col') Description
+    tbody
+      tr
+        td 
+          a(href='/sleep') Sleep
+        td This data type captures the user's length and type of sleep. Each data point represents a time interval for a stage of sleep.

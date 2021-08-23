@@ -1,23 +1,19 @@
 const renderError = require("../renderError");
 
-exports.sumTotalAndListAll = (res, data) => {
+exports.simpleDataHeartRate = (res, data) => {
   const bucketArr = data.bucket;
-  let stepsTotal = 0;
-  let stepsArr = [];
+  let heartRateArr = [];
 
   try {
     for (const item of bucketArr) {
       for (const dataset of item.dataset) {
         for (const point of dataset.point) {
-          for (const value of point.value) {
-            stepsTotal += value.intVal;
-            stepsArr.push(value.intVal);
-          }
+          heartRateArr.push({ point });
         }
       }
     }
 
-    res.json({ stepsTotal, stepsArr });
+    res.json(heartRateArr);
   } catch (err) {
     renderError(err, res);
   }
